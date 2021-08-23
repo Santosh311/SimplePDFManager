@@ -14,6 +14,7 @@ def gui():
     root.title("Simple PDF Manager")
     root.state('zoomed')
     root.geometry("300x300")
+    root.iconbitmap("D:\Python_Course\PDFConverter\icon.ico")
     root['bg'] = "green"
 
     bg = Image.open("D:\Python_Course\PDFConverter\img.jpeg")
