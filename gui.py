@@ -8,16 +8,26 @@ from split_pdf import split_pdf
 from extract_pdf import extract_page
 from rotate_pdf import rotate_pages
 from encrypt_pdf import encrypt_pdf
+import os
+import sys
 
 def gui():
     root = Tk()
     root.title("Simple PDF Manager")
     root.state('zoomed')
     root.geometry("300x300")
-    root.iconbitmap("D:\Python_Course\PDFConverter\icon.ico")
-    root['bg'] = "green"
+    #root['bg'] = "green"
 
-    bg = Image.open("D:\Python_Course\PDFConverter\img.jpeg")
+    def resource_path(relative_path):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_path, relative_path)
+
+    img_path = "D:\Python_Course\PDFConverter\img.jpeg"
+    start = "D:\Python_Course\PDFConverter"
+    rel_img_path = os.path.relpath(img_path, start)
+    bg = Image.open(resource_path(rel_img_path))
+
     resized_image = bg.resize((1920, 1080), Image.ANTIALIAS)
     canvas1 = Canvas(root, width=300, height=300)
     new_image = ImageTk.PhotoImage(resized_image)
@@ -26,127 +36,152 @@ def gui():
     canvas1.create_image(0, 0, image=new_image, anchor="nw")
 
     def about():
-        pdf = filedialog.askopenfilename(initialdir="/", title="Select A File",
-                                         filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        info = getPDFInfo(pdf)
-        top = Toplevel(root)
-        top.geometry("900x300")
-        root.eval(f'tk::PlaceWindow {str(top)} center')
-        label1 = Label(top, text=info, padx=10, pady=10, font=("Times New Roman", 12, "bold"))
-        label1.pack(pady=10)
+        try:
+            pdf = filedialog.askopenfilename(initialdir="/", title="Select A File",
+                                             filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            info = getPDFInfo(pdf)
+            top = Toplevel(root)
+            top.geometry("900x300")
+            root.eval(f'tk::PlaceWindow {str(top)} center')
+            label1 = Label(top, text=info, padx=10, pady=10, font=("Times New Roman", 12, "bold"))
+            label1.pack(pady=10)
 
-        def exit_popup():
-            messagebox.showinfo(title="Success Message", message="File Info Displayed Succesfully")
-            top.destroy()
-            top.update()
+            def exit_popup():
+                messagebox.showinfo(title="Success Message", message="File Info Displayed Succesfully")
+                top.destroy()
+                top.update()
 
-        btn = Button(top, text="Exit", padx=5, pady=5, command=exit_popup)
-        btn.pack()
+            btn = Button(top, text="Exit", padx=5, pady=5, command=exit_popup)
+            btn.pack()
+
+        except Exception:
+            messagebox.showerror(title="Failure Message", message="Failed to display file")
 
     def merge():
-        pdfs_open = filedialog.askopenfilenames(initialdir="/", title="Select A File",
-                                                filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        merge_list = list(pdfs_open)
-        pdfs_save = filedialog.asksaveasfilename(initialdir="/", title="Select A File",
-                                                 filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        merge_pdfs(merge_list, pdfs_save)
-        messagebox.showinfo(title="Success Message", message="PDFs Merged Succesfully")
+        try:
+            pdfs_open = filedialog.askopenfilenames(initialdir="/", title="Select A File",
+                                                    filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            merge_list = list(pdfs_open)
+            pdfs_save = filedialog.asksaveasfilename(initialdir="/", title="Select A File",
+                                                     filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            savefile = f"{pdfs_save}.pdf"
+            merge_pdfs(merge_list, savefile)
+            messagebox.showinfo(title="Success Message", message="PDFs Merged Succesfully")
+
+        except Exception:
+            messagebox.showerror(title="Failure Message", message="Failed to merge files")
 
     def split():
-        pdf_split = filedialog.askopenfilename(initialdir="/", title="Select A File",
-                                               filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        pdfs_save = pdf_split.split(".")[0]
-        n = IntVar()
-        top = Toplevel(root)
-        top.geometry("300x100")
-        root.eval(f'tk::PlaceWindow {str(top)} center')
-        label1 = Label(top, text="Enter page to split at", padx=10, pady=10)
-        label1.pack()
-        e1 = Entry(top, width=15, textvariable=n)
-        e1.pack()
+        try:
+            pdf_split = filedialog.askopenfilename(initialdir="/", title="Select A File",
+                                                   filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            pdfs_save = pdf_split.split(".")[0]
+            n = IntVar()
+            top = Toplevel(root)
+            top.geometry("300x100")
+            root.eval(f'tk::PlaceWindow {str(top)} center')
+            label1 = Label(top, text="Enter page to split at", padx=10, pady=10)
+            label1.pack()
+            e1 = Entry(top, width=15, textvariable=n)
+            e1.pack()
 
-        def call_split_fun(pdf_path, pdf_save_path):
-            num = int(n.get())
-            split_pdf(pdf_path, num, pdf_save_path)
-            messagebox.showinfo(title="Success Message", message="PDF Split Succesfully")
-            top.destroy()
-            top.update()
+            def call_split_fun(pdf_path, pdf_save_path):
+                num = int(n.get())
+                split_pdf(pdf_path, num, pdf_save_path)
+                messagebox.showinfo(title="Success Message", message="PDF Split Succesfully")
+                top.destroy()
+                top.update()
 
-        btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_split_fun(pdf_split, pdfs_save))
-        btn.pack()
+            btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_split_fun(pdf_split, pdfs_save))
+            btn.pack()
+
+        except Exception:
+            messagebox.showerror(title="Failure Message", message="Failed to split file")
 
     def extract():
-        pdf_extract = filedialog.askopenfilename(initialdir="/", title="Select A File",
-                                                 filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        page_no = IntVar()
-        top = Toplevel(root)
-        top.geometry("300x100")
-        root.eval(f'tk::PlaceWindow {str(top)} center')
-        label1 = Label(top, text="Enter page no to extract", padx=10, pady=10)
-        label1.pack()
-        e1 = Entry(top, width=15, textvariable=page_no)
-        e1.pack()
+        try:
+            pdf_extract = filedialog.askopenfilename(initialdir="/", title="Select A File",
+                                                     filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            page_no = IntVar()
+            top = Toplevel(root)
+            top.geometry("300x100")
+            root.eval(f'tk::PlaceWindow {str(top)} center')
+            label1 = Label(top, text="Enter page no to extract", padx=10, pady=10)
+            label1.pack()
+            e1 = Entry(top, width=15, textvariable=page_no)
+            e1.pack()
 
-        def call_extract_fun(pdf_path):
-            num = int(page_no.get())
-            extract_page(pdf_path, num)
-            messagebox.showinfo(title="Success Message", message="Page Extracted Succesfully")
-            top.destroy()
-            top.update()
+            def call_extract_fun(pdf_path):
+                num = int(page_no.get())
+                extract_page(pdf_path, num)
+                messagebox.showinfo(title="Success Message", message="Page Extracted Succesfully")
+                top.destroy()
+                top.update()
 
-        btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_extract_fun(pdf_extract))
-        btn.pack()
+            btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_extract_fun(pdf_extract))
+            btn.pack()
+
+        except Exception:
+            messagebox.showerror(title="Failure Message", message="Failed to merge files")
 
     def rotate():
-        pdf_rotate = filedialog.askopenfilename(initialdir="/", title="Select A File",
-                                                filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        direction = StringVar()
-        top = Toplevel(root)
-        top.geometry("500x200")
-        root.eval(f'tk::PlaceWindow {str(top)} center')
-        label1 = Label(top, text="Enter direction to specify", padx=10, pady=10)
-        label1.pack()
+        try:
+            pdf_rotate = filedialog.askopenfilename(initialdir="/", title="Select A File",
+                                                    filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            direction = StringVar()
+            top = Toplevel(root)
+            top.geometry("500x200")
+            root.eval(f'tk::PlaceWindow {str(top)} center')
+            label1 = Label(top, text="Enter direction to specify", padx=10, pady=10)
+            label1.pack()
 
-        def onClick(*args):
-            e1.delete(0, 'end')
+            def onClick(*args):
+                e1.delete(0, 'end')
 
-        e1 = Entry(top, width=60, textvariable=direction)
-        e1.insert(0, "Enter clockwise, counter clockwise or upside down only")
-        e1.pack()
-        e1.bind("<Button-1>", onClick)
+            e1 = Entry(top, width=60, textvariable=direction)
+            e1.insert(0, "Enter clockwise, counter clockwise or upside down only")
+            e1.pack()
+            e1.bind("<Button-1>", onClick)
 
-        def call_rotate_fun(pdf_path):
-            d = str(direction.get())
-            rotate_pages(pdf_path, d)
-            messagebox.showinfo(title="Success Message", message="PDF Rotated Succesfully")
-            top.destroy()
-            top.update()
+            def call_rotate_fun(pdf_path):
+                d = str(direction.get())
+                rotate_pages(pdf_path, d)
+                messagebox.showinfo(title="Success Message", message="PDF Rotated Succesfully")
+                top.destroy()
+                top.update()
 
-        btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_rotate_fun(pdf_rotate))
-        btn.pack(pady=20)
+            btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_rotate_fun(pdf_rotate))
+            btn.pack(pady=20)
+
+        except Exception:
+            messagebox.showerror(title="Failure Message", message="Failed to merge files")
 
     def encrypt():
-        pdf_encrypt = filedialog.askopenfilename(initialdir="/", title="Select A File",
-                                                 filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
-        password = StringVar()
-        top = Toplevel(root)
-        top.geometry("300x100")
-        root.eval(f'tk::PlaceWindow {str(top)} center')
-        label1 = Label(top, text="Enter password", padx=10, pady=10)
-        label1.pack()
+        try:
+            pdf_encrypt = filedialog.askopenfilename(initialdir="/", title="Select A File",
+                                                     filetypes=(("pdf files", "*.pdf"), ("all files", "*.*")))
+            password = StringVar()
+            top = Toplevel(root)
+            top.geometry("300x100")
+            root.eval(f'tk::PlaceWindow {str(top)} center')
+            label1 = Label(top, text="Enter password", padx=10, pady=10)
+            label1.pack()
 
-        e1 = Entry(top, width=10, textvariable=password)
-        e1.pack()
+            e1 = Entry(top, width=10, textvariable=password)
+            e1.pack()
 
-        def call_encrypt_fun(pdf_path):
-            p = str(password.get())
-            encrypt_pdf(pdf_path, p)
-            messagebox.showinfo(title="Success Message", message="PDF Encrypted Succesfully")
-            top.destroy()
-            top.update()
+            def call_encrypt_fun(pdf_path):
+                p = str(password.get())
+                encrypt_pdf(pdf_path, p)
+                messagebox.showinfo(title="Success Message", message="PDF Encrypted Succesfully")
+                top.destroy()
+                top.update()
 
-        btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_encrypt_fun(pdf_encrypt))
-        btn.pack()
+            btn = Button(top, text="OK", padx=7, pady=7, command=lambda: call_encrypt_fun(pdf_encrypt))
+            btn.pack()
+
+        except Exception:
+            messagebox.showerror(title="Failure Message", message="Failed to merge files")
 
     b1 = Button(root, text="About PDF", command=about, width=50, height=2, borderwidth=3, bg="#51ECCA",
                 font=("Consolas", 15, "bold"))
